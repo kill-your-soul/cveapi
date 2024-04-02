@@ -1,10 +1,10 @@
-import sqlmodel
 from . import BaseModel
+from sqlmodel import Field, MetaData
 
 
-class Bdu(BaseModel):
+class Bdu(BaseModel, table=True):
+    metadata = MetaData()
     __tablename__ = "bdus"
 
-    bdu_id = db.Column(db.String(), nullable=False)
-    description = db.Column(db.String(), nullable=False)
-
+    bdu_id: str = Field(primary_key=True)
+    description: str = Field(nullable=False)

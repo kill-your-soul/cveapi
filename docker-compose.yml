@@ -17,5 +17,10 @@ services:
     ports:
       - "5432:5432"
 
+  backend:
+    restart: always
+    build:
+      context: .
+
 volumes:
   db_data:

@@ -1,9 +1,10 @@
 from . import BaseModel
+from sqlmodel import Field
 
 
-class Cwe(BaseModel):
+class Cwe(BaseModel, table=True):
     __tablename__ = "cwes"
 
-    cwe_id = db.Column(db.String(), nullable=False, index=True)
-    name = db.Column(db.String())
-    description = db.Column(db.String())
+    cwe_id: str = Field(index=True, nullable=False)
+    name: str
+    description: str

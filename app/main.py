@@ -5,3 +5,5 @@ from core.config import settings
 #
 # )
 print(settings.PROJECT_NAME)
+while 1:
+    pass

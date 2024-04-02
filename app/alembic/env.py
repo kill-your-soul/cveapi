@@ -5,7 +5,9 @@ from sqlalchemy import pool
 
 from alembic import context
 import os
-
+# from app.models import SQLModel
+from app.models.bdu import Bdu
+from app.models.cwe import Cwe
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -19,8 +21,9 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-# TODO: Add SQLModel from models local package
-target_metadata = None
+# TODO: Make more clever code
+target_metadata = [Bdu.metadata, Cwe.metadata]
+# target_metadata = SQLModel.metadata
 
 # other values from the config.py, defined by the needs of env.py,
 # can be acquired:
@@ -29,11 +32,11 @@ target_metadata = None
 
 
 def get_url():
-    user = os.getenv("POSTGRES_USER", "postgres")
-    password = os.getenv("POSTGRES_PASSWORD", "")
-    server = os.getenv("POSTGRES_SERVER", "db")
+    user = os.getenv("POSTGRES_USER", "change_me")
+    password = os.getenv("POSTGRES_PASSWORD", "change_me")
+    server = os.getenv("POSTGRES_SERVER", "127.0.0.1")
     port = os.getenv("POSTGRES_PORT", "5432")
-    db = os.getenv("POSTGRES_DB", "app")
+    db = os.getenv("POSTGRES_DB", "change_me")
     return f"postgresql+psycopg://{user}:{password}@{server}:{port}/{db}"
 
 
@@ -70,6 +73,7 @@ def run_migrations_online() -> None:
     """
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = get_url()
+    print(get_url())
     connectable = engine_from_config(
         configuration,
         prefix="sqlalchemy.",
@@ -83,6 +87,7 @@ def run_migrations_online() -> None:
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()
