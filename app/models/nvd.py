@@ -1,13 +1,11 @@
 from app.models.base import BaseModel
-from sqlmodel import Column, DateTime, Field, MetaData
+from sqlmodel import Column, Field, MetaData
 from sqlalchemy import JSON
-from sqlalchemy.sql import func
-from datetime import datetime
 
 
-class Cve(BaseModel, table=True):
+class Nvd(BaseModel, table=True):
     metadata = MetaData()
-    __tablename__ = "cves"
+    __tablename__ = "nvds"
 
     cve_id: str = Field(nullable=False)
     json: dict = Field(sa_column=Column(JSON), default={})

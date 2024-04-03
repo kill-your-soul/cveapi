@@ -6,5 +6,6 @@ class Bdu(BaseModel, table=True):
     metadata = MetaData()
     __tablename__ = "bdus"
 
-    bdu_id: str = Field(primary_key=True)
+    bdu_id: str = Field(nullable=False)
+    cve_id: str = Field(nullable=False)
     description: str = Field(nullable=False)

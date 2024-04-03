@@ -1,34 +1,17 @@
 from fastapi import APIRouter
-from sqlmodel import select, func
-from app.models.cve import Cve
+from sqlmodel import select
+
 from app.api.deps import SessionDep
-from app.schemas.cve import CveCreate
+from app.models.bdu import Bdu
+from app.models.nvd import Nvd
+
 
 router = APIRouter()
 
-
 @router.get("/")
-async def get_cves(session: SessionDep):
-    count_statement = (
-        select(func.count())
-        .select_from(Cve)
-    )
-    count = (await session.execute(count_statement)).one()
-    statement = select(Cve)
-    cves = (await session.execute(statement)).scalars().all()
-    return cves
-
-
-@router.get("/{id}")
-async def read_cve(session: SessionDep, id: str):
-    item = await session.get(Cve, id)
-    return item
-
-
-@router.post("/")
-async def create_cve(session: SessionDep, bdu_in: CveCreate):
-    cve = Cve.model_validate(bdu_in)
-    session.add(cve)
-    await session.commit()
-    await session.refresh(cve)
-    return cve
+async def get_cve(session: SessionDep, cve_id: str):
+    statement_bdu = select(Bdu).where(Bdu.cve_id == cve_id)
+    statement_nvd = select(Nvd).where(Nvd.cve_id == cve_id)
+    bdu = (await session.execute(statement_bdu)).first()[0]
+    nvd = (await session.execute(statement_nvd)).first()[0]
+    return {"bdu": bdu.model_dump(exclude={"created_at", "updated_at"}), "nvd": nvd.model_dump(exclude={"created_at", "updated_at"})}

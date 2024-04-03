@@ -30,7 +30,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./app:/app
+      - ./app:/app/app
 
 volumes:
   db_data:
