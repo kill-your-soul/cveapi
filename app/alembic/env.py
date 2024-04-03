@@ -6,8 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 import os
 # from app.models import SQLModel
-from app.models.bdu import Bdu
-from app.models.cwe import Cwe
+from app.models import metadata
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -22,7 +21,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 # TODO: Make more clever code
-target_metadata = [Bdu.metadata, Cwe.metadata]
+target_metadata = metadata
 # target_metadata = SQLModel.metadata
 
 # other values from the config.py, defined by the needs of env.py,

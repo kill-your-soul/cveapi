@@ -1,8 +1,10 @@
 FROM python:3.11
 
 COPY . .
-RUN pip install poetry
-RUN poetry install
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python && \
+    cd /usr/local/bin && \
+    ln -s /opt/poetry/bin/poetry && \
+    poetry config virtualenvs.create false
+RUN poetry install --no-root
 
-
-ENTRYPOINT ["python3", "app/main.py"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]

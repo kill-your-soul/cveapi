@@ -1,4 +1,4 @@
-from . import BaseModel
+from app.models.base import BaseModel
 from sqlmodel import Field, MetaData
 
 

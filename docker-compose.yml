@@ -5,6 +5,8 @@ services:
   db:
     image: postgres
     restart: always
+    networks:
+      - default
     volumes:
       - db_data:/var/lib/postgresql/data/pgdata
     env_file:
@@ -18,9 +20,19 @@ services:
       - "5432:5432"
 
   backend:
+    networks:
+      - default
+    depends_on:
+      - db
     restart: always
     build:
       context: .
+    ports:
+      - "80:80"
+    volumes:
+      - ./app:/app
 
 volumes:
   db_data:
+networks:
+  default:
