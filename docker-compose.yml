@@ -19,7 +19,7 @@ services:
     ports:
       - "5432:5432"
 
-  backend:
+  core:
     networks:
       - default
     depends_on:
@@ -31,6 +31,20 @@ services:
       - "80:80"
     volumes:
       - ./app:/app/app
+
+  script:
+    depends_on:
+      - core
+      - db
+    networks:
+      - default
+    build:
+      context: ./scripts
+    volumes:
+      - ./scripts:/script
+    
+    command: sh -c "if [ '$INIT_SCRIPT_ENABLED' = 'true' ]; then echo 'start init script'; python -u /script/main.py; fi"
+
 
 volumes:
   db_data:

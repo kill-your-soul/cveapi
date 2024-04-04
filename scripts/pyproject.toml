@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "cveapi-init"
+version = "0.0.1"
+description = ""
+authors = ["kill_your_soul <platonovdi@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pydantic-settings = "^2.2.1"
+requests = "^2.31.0"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.3.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
