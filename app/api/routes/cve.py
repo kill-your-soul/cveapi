@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter
 from sqlmodel import select
 
@@ -5,13 +7,28 @@ from app.api.deps import SessionDep
 from app.models.bdu import Bdu
 from app.models.nvd import Nvd
 
-
 router = APIRouter()
 
+
 @router.get("/")
-async def get_cve(session: SessionDep, cve_id: str):
+async def get_cve(session: SessionDep, cve_id: str) -> dict[str, Any]:
     statement_bdu = select(Bdu).where(Bdu.cve_id == cve_id)
     statement_nvd = select(Nvd).where(Nvd.cve_id == cve_id)
-    bdu = (await session.execute(statement_bdu)).first()[0]
-    nvd = (await session.execute(statement_nvd)).first()[0]
-    return {"bdu": bdu.model_dump(exclude={"created_at", "updated_at"}), "nvd": nvd.model_dump(exclude={"created_at", "updated_at"})}
+    bdu_result = await session.execute(statement_bdu)
+    nvd_result = await session.execute(statement_nvd)
+    bdu_row = bdu_result.first()
+    nvd_row = nvd_result.first()
+    bdu = bdu_row[0] if bdu_row else None
+    nvd = nvd_row[0] if nvd_row else None
+
+    response = {}
+    if bdu:
+        response["bdu"] = bdu.model_dump(exclude={"created_at", "updated_at"})
+    else:
+        response["bdu"] = None
+    if nvd:
+        response["nvd"] = nvd.model_dump(exclude={"created_at", "updated_at"})
+    else:
+        response["nvd"] = None
+
+    return response

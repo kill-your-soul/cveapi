@@ -1,6 +1,7 @@
-from app.models.base import BaseModel
-from sqlmodel import Column, Field, MetaData
 from sqlalchemy import JSON
+from sqlmodel import Column, Field, MetaData
+
+from app.models.base import BaseModel
 
 
 class Nvd(BaseModel, table=True):
@@ -23,4 +24,3 @@ class Nvd(BaseModel, table=True):
     # Keep CVSS separated when searching a particular score
     cvss2: float = Field(nullable=True)
     cvss3: float = Field(nullable=True)
-

@@ -2,15 +2,27 @@ from config import settings
 import time
 import requests
 import json
+from openpyxl import load_workbook
+from io import BytesIO
 
-def run():
+
+def run_bdu():
+    print("Getting info from BDU")
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+    }
+    xlsx = requests.get(settings.BDU_XLSX_URL, verify=False, allow_redirects=True, headers=headers).content
+    wb = load_workbook(filename=BytesIO(xlsx))
+
+
+def run_nvd():
     """
     Import the CVE list.
 
     Important notice:
         This product uses data from the NVD API but is not endorsed or certified by the NVD.
     """
-    print("Gettins info from nvd")
+    print("Gettins info from NVD")
     mappings = {"vendors": {}, "products": {}, "cves": [], "changes": []}
     url_template = settings.NVD_API_URL + "?startIndex={idx}"
 
@@ -163,4 +175,4 @@ def run():
 
 
 if __name__ == '__main__':
-    run()
+    run_nvd()

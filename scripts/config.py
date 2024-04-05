@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     )
     NVD_API_URL: str
     CVE_API_URL: str
+    BDU_XLSX_URL: str
 
 
 settings = Settings()

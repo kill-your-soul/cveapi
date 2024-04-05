@@ -1,7 +1,6 @@
 from fastapi import APIRouter
-from app.api.routes import bdu, cwe, nvd, cve
 
-# TODO: Add import routes
+from app.api.routes import bdu, cve, cwe, nvd
 
 api_router = APIRouter()
 api_router.include_router(nvd.router, prefix="/nvd", tags=["nvd"])
