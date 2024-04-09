@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "cveapi-init"
+name = "cveapi-updater"
 version = "0.0.1"
 description = ""
 authors = ["kill_your_soul <platonovdi@gmail.com>"]
@@ -10,10 +10,35 @@ python = "^3.10"
 pydantic-settings = "^2.2.1"
 requests = "^2.31.0"
 openpyxl = "^3.1.2"
-
+celery = {extras = ["redis"], version = "^5.3.6"}
+click = "^8.1.7"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.3.5"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D106",
+    "FA100",
+    "RET504",
+    "A002",
+    "ANN101",
+    "SIM108",
+    "S113",
+    "T201"
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
 
 [build-system]
 requires = ["poetry-core"]

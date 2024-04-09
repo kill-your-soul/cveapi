@@ -1,7 +1,7 @@
 from sqlalchemy import JSON
 from sqlmodel import Column, Field, MetaData
 
-from app.models.base import BaseModel
+from core.models.base import BaseModel
 
 
 class Nvd(BaseModel, table=True):

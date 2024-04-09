@@ -3,9 +3,9 @@ import datetime
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 
-from app.api.deps import SessionDep
-from app.models.cwe import Cwe
-from app.schemas.cwe import CweCreate
+from core.api.deps import SessionDep
+from core.models.cwe import Cwe
+from core.schemas.cwe import CweCreate
 
 router = APIRouter()
 
@@ -45,7 +45,7 @@ async def update_cwe(session: SessionDep, id: str, cwe_in: CweCreate) -> Cwe:
         setattr(item, key, value)
 
     # Commit the changes and refresh the object
-    item.updated_at = datetime.utcnow()
+    item.updated_at = datetime.utcnow() # type: ignore  # noqa: PGH003
     await session.commit()
     await session.refresh(item)
 

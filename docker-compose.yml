@@ -1,6 +1,5 @@
 version: '3.8'
 services:
-#  bot:
 
   db:
     image: postgres
@@ -26,27 +25,73 @@ services:
       - db
     restart: always
     build:
-      context: .
+      context: ./core
     ports:
       - "80:80"
     volumes:
-      - ./app:/app/app
+      - ./core:/app/core
+      - ./.env:/app/.env:ro
 
-  script:
+  # updater:
+  #   depends_on:
+  #     - core
+  #     - db
+  #   networks:
+  #     - default
+  #   build:
+  #     context: ./updater
+  #   volumes:
+  #     - ./updater:/updater
+  redis:
+    image: redis:7
+    restart: always
+    networks:
+      - default
+  
+  celery_worker:
+    networks:
+      - default
     depends_on:
       - core
       - db
+      - redis
+    build:
+      context: ./updater
+    volumes:
+      - ./updater:/updater
+    command: celery -A update.celery worker --loglevel=info
+
+  celery-beat:
+    build:
+      context: ./updater
+    depends_on:
+      - redis
+      - celery_worker
     networks:
       - default
-    build:
-      context: ./scripts
+    command: celery -A update.celery beat --loglevel=info
     volumes:
-      - ./scripts:/script
-    
-    command: sh -c "if [ '$INIT_SCRIPT_ENABLED' = 'true' ]; then echo 'start init script'; python -u /script/main.py; fi"
+      - ./updater:/updater  # унаследуйте настройки updater
+  # flower:
+  #   build:
+  #     context: ./updater
+  #   depends_on:
+  #     - redis
+  #     - celery-beat  # flower зависит от расписания beat
+  #     - celery_worker
+  #   networks:
+  #     - default
+  #   command: celery flower --port=5555
+  #   ports:
+  #     - "5555:5555"
+  #   volumes:
+  #     - ./updater:/app/updater
+
+    # command: celery -A update worker --loglevel=info; celery -A update beat --loglevel=info; celery -A update flower --port 5555 
 
 
 volumes:
   db_data:
+
 networks:
   default:

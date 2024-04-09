@@ -5,9 +5,9 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 
-from app.api.deps import SessionDep
-from app.models.bdu import Bdu
-from app.schemas.bdu import BduCreate
+from core.api.deps import SessionDep
+from core.models.bdu import Bdu
+from core.schemas.bdu import BduCreate
 
 router = APIRouter()
 

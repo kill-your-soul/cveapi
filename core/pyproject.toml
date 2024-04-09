@@ -37,7 +37,10 @@ ignore = [
     "FA100",
     "RET504",
     "A002",
-    "ANN101"
+    "ANN101",
+    "SIM108",
+    "S113",
+    "T201"
 ]
 
 [tool.ruff]
@@ -55,7 +58,7 @@ warn_unused_ignores = true
 disallow_any_generics = true
 check_untyped_defs = true
 no_implicit_reexport = true
-attr-defined = false
+# attr-defined = false
 
 # for strict mypy: (this is the tricky one :-))
 disallow_untyped_defs = true
