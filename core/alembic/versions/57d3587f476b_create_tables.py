@@ -54,7 +54,7 @@ def upgrade() -> None:
     sa.Column('cvss3', sa.Float(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_nvds_created_at'), 'nvds', ['created_at'], unique=False)
+    # op.create_index(op.f('ix_nvds_created_at'), 'nvds', ['created_at'], unique=False)
     # ### end Alembic commands ###
 
 

@@ -1,21 +1,46 @@
 import hashlib
 import json
+import re
 import time
 from io import BytesIO
 
-# from openpyxl import load_workbook
 import click
 import requests
-from config import settings
-from models import Nvd
+from openpyxl import load_workbook
 
-# def run_bdu():
-#     print("Getting info from BDU")
-#     headers = {
-#         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
-#     }
-#     xlsx = requests.get(settings.BDU_XLSX_URL, verify=False, allow_redirects=True, headers=headers).content  # noqa: S113, S501
-#     wb = load_workbook(filename=BytesIO(xlsx))
+from config import settings
+
+# from models import Nvd
+
+@click.command()
+def init_bdu():
+    print("Getting info from BDU")
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+    }
+    xlsx = requests.get(settings.BDU_XLSX_URL, verify=False, allow_redirects=True, headers=headers).content  # noqa: S113, S501
+    wb = load_workbook(filename=BytesIO(xlsx))
+    results = []
+    sheet = wb.active
+    for row in sheet.iter_rows(min_row=3):
+        bdu_id = row[0].value
+        description = row[1].value
+        bdu_data = {"cve_id": "", "bdu_id": bdu_id, "description": description}
+        other_id = row[18].value
+        # print(f"{other_id =}")
+        if other_id:
+            cve_match = re.findall(r"CVE-\d{4}-\d{4}", str(other_id))
+            # print(cve_match)
+            for cve_id in cve_match:
+                bdu_data["cve_id"] = cve_id
+                results.append(bdu_data)
+        else:
+            bdu_data["cve_id"] = ""
+            results.append(bdu_data)
+    for bdu in results:
+        resp = requests.post(settings.CVE_API_URL + "api/v1/bdu/", data=json.dumps(bdu))
+        print(resp.text)
+
 
 @click.command()
 def init_nvd() -> None:
@@ -133,4 +158,4 @@ def init_nvd() -> None:
 
 
 if __name__ == "__main__":
-    init_nvd()
+    init_bdu()

@@ -26,7 +26,7 @@ def upgrade() -> None:
     op.add_column('cwes', sa.Column('hash_sum', sqlmodel.sql.sqltypes.AutoString(), nullable=False))
     op.create_index(op.f('ix_cwes_hash_sum'), 'cwes', ['hash_sum'], unique=True)
     op.add_column('nvds', sa.Column('hash_sum', sqlmodel.sql.sqltypes.AutoString(), nullable=False))
-    op.drop_index('ix_cves_created_at', table_name='nvds')
+    # op.drop_index('ix_cves_created_at', table_name='nvds')
     op.create_index(op.f('ix_nvds_created_at'), 'nvds', ['created_at'], unique=False)
     op.create_index(op.f('ix_nvds_hash_sum'), 'nvds', ['hash_sum'], unique=True)
     # ### end Alembic commands ###

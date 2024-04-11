@@ -19,6 +19,8 @@ services:
       - "5432:5432"
 
   core:
+    env_file:
+      - .env
     networks:
       - default
     depends_on:
@@ -31,17 +33,19 @@ services:
     volumes:
       - ./core:/app/core
       - ./.env:/app/.env:ro
-
-  # updater:
-  #   depends_on:
-  #     - core
-  #     - db
-  #   networks:
-  #     - default
-  #   build:
-  #     context: ./updater
-  #   volumes:
-  #     - ./updater:/updater
+  init:
+    env_file:
+      - .env
+    networks:
+      - default
+    depends_on:
+      - core
+      - db
+    build: 
+      context: ./updater
+    volumes:
+      - ./updater:/updater
+    command: python -u main.py
   redis:
     image: redis:7
     restart: always
@@ -72,23 +76,6 @@ services:
     command: celery -A update.celery beat --loglevel=info
     volumes:
       - ./updater:/updater  # унаследуйте настройки updater
-  # flower:
-  #   build:
-  #     context: ./updater
-  #   depends_on:
-  #     - redis
-  #     - celery-beat  # flower зависит от расписания beat
-  #     - celery_worker
-  #   networks:
-  #     - default
-  #   command: celery flower --port=5555
-  #   ports:
-  #     - "5555:5555"
-  #   volumes:
-  #     - ./updater:/app/updater
-
-    # command: celery -A update worker --loglevel=info; celery -A update beat --loglevel=info; celery -A update flower --port 5555 
-
 
 volumes:
   db_data:

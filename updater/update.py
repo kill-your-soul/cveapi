@@ -82,7 +82,7 @@ def update_nvd() -> None:
             for cve in mappings["cves"]:
                 nvd_in = Nvd(**cve)
                 nvd_in_hash_sum = hashlib.sha256(
-                    json.dumps(nvd_in.model_dump(), sort_keys=True).encode("utf-8")
+                    json.dumps(nvd_in.model_dump(), sort_keys=True).encode("utf-8"),
                 ).hexdigest()
                 print(nvd_in_hash_sum)
                 server_data = requests.get(settings.CVE_API_URL + f"api/v1/cve/?cve_id={cve['cve_id']}").json()
