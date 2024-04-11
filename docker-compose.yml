@@ -70,7 +70,7 @@ services:
       context: ./updater
     depends_on:
       - redis
-      - celery_worker
+      - celery-worker
     networks:
       - default
     command: celery -A update.celery beat --loglevel=info
