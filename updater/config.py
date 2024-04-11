@@ -18,7 +18,7 @@ celery = Celery("update", broker=settings.BROKER)
 
 celery.conf.beat_schedule = {
     "run-everyday": {
-        "task": "update.update_nvd",
+        "task": "update.update",
         "schedule": crontab(minute=14, hour=1),
     },
 }

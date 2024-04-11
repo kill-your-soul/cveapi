@@ -52,7 +52,7 @@ services:
     networks:
       - default
   
-  celery_worker:
+  celery-worker:
     networks:
       - default
     depends_on:

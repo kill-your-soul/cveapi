@@ -159,3 +159,4 @@ def init_nvd() -> None:
 
 if __name__ == "__main__":
     init_bdu()
+    init_nvd()

@@ -32,7 +32,8 @@ ignore = [
     "ANN101",
     "SIM108",
     "S113",
-    "T201"
+    "T201",
+    "ERA001"
 ]
 
 [tool.ruff]

@@ -9,7 +9,13 @@ from models import Nvd
 
 
 @celery.task
-def update_nvd() -> None:
+def update_bdu() -> None:
+    # TODO @kill_your_soul: Add update bdu 
+    pass
+
+
+@celery.task
+def update_nvd() -> None:  # noqa: PLR0915, PLR0912, C901
     """Import the CVE list.
 
     Important notice:
@@ -104,4 +110,7 @@ def update_nvd() -> None:
             time.sleep(6)
 
 
-
+@celery.task
+def update() -> None:
+    update_nvd()
+    update_bdu()
