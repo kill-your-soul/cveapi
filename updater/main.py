@@ -4,7 +4,6 @@ import re
 import time
 from io import BytesIO
 
-import click
 import requests
 from openpyxl import load_workbook
 
@@ -12,37 +11,38 @@ from config import settings
 
 # from models import Nvd
 
-@click.command()
-def init_bdu():
+def init_bdu() -> None:
     print("Getting info from BDU")
+    # r = requests.get(settings.CVE_API_URL)
+    # print(r)
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     }
-    xlsx = requests.get(settings.BDU_XLSX_URL, verify=False, allow_redirects=True, headers=headers).content  # noqa: S113, S501
+    xlsx = requests.get(settings.BDU_XLSX_URL, verify=False, allow_redirects=True, headers=headers).content  # noqa: S501
     wb = load_workbook(filename=BytesIO(xlsx))
     results = []
     sheet = wb.active
-    for row in sheet.iter_rows(min_row=3):
+    session = requests.Session()
+    # f = open('res.txt', 'w')
+    for row in sheet.iter_rows(min_row=4):
         bdu_id = row[0].value
         description = row[1].value
-        bdu_data = {"cve_id": "", "bdu_id": bdu_id, "description": description}
         other_id = row[18].value
-        # print(f"{other_id =}")
+        # Создаем новый словарь для каждой итерации
+        bdu_data = {"cve_id": "", "bdu_id": bdu_id, "description": description}
         if other_id:
-            cve_match = re.findall(r"CVE-\d{4}-\d{4}", str(other_id))
-            # print(cve_match)
+            cve_match = re.findall(r"CVE-\d{4}-\d{4,7}", str(other_id))
             for cve_id in cve_match:
-                bdu_data["cve_id"] = cve_id
-                results.append(bdu_data)
+                # Создаем новый словарь для каждого cve_id
+                temp_bdu_data = bdu_data.copy()
+                temp_bdu_data["cve_id"] = cve_id
+                results.append(temp_bdu_data)
         else:
-            bdu_data["cve_id"] = ""
             results.append(bdu_data)
     for bdu in results:
-        resp = requests.post(settings.CVE_API_URL + "api/v1/bdu/", data=json.dumps(bdu))
-        print(resp.text)
+        _resp = session.post(settings.CVE_API_URL + "api/v1/bdu/", data=json.dumps(bdu))
+        # print(resp)
 
-
-@click.command()
 def init_nvd() -> None:
     """Import the CVE list.
 
@@ -116,7 +116,7 @@ def init_nvd() -> None:
             # nvd_in_hash_sum = hashlib.sha256(json.dumps(nvd_in.model_dump(), sort_keys=True).encode("utf-8")).hexdigest()
             # print(nvd_in_hash_sum)
             # print(cve)
-            break
+            # break
 
         # NVD requirement is 2000 CVE per page
         start_index += 2000
@@ -128,9 +128,9 @@ def init_nvd() -> None:
             # db.session.commit()
             # Create the changes based on CVEs data
             for cve in mappings["cves"]:
-                print(cve)
+                # print(cve)
                 resp = requests.post(settings.CVE_API_URL + "api/v1/nvd/", data=json.dumps(cve))
-                print(resp.text)
+                # print(resp.text)
                 # time.sleep(1)
                 # mappings["changes"].append(
                 #     dict(
@@ -155,6 +155,7 @@ def init_nvd() -> None:
         if start_index <= total_results:
             # info("Waiting 6 seconds")
             time.sleep(6)
+
 
 
 if __name__ == "__main__":

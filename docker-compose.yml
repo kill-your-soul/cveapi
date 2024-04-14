@@ -44,8 +44,8 @@ services:
     build: 
       context: ./updater
     volumes:
-      - ./updater:/updater
-    command: python -u main.py
+      - ./updater:/app/updater
+    command: python -u test.py
   redis:
     image: redis:7
     restart: always
@@ -62,7 +62,7 @@ services:
     build:
       context: ./updater
     volumes:
-      - ./updater:/updater
+      - ./updater:/app/updater
     command: celery -A update.celery worker --loglevel=info
 
   celery-beat:
