@@ -29,7 +29,7 @@
         <thead>
             <tr>
                 <th>Параметр</th>
-                <th>Значение</th>
+                <th colspan="2">Значение</th>
             </tr>
         </thead>
         <tbody>
@@ -40,20 +40,22 @@
             </tr>
             <tr>
                 <td>Описание</td>
-                <td>{{ data['description'] }}</td>
+                <td colspan="2">{{ data['description'] }}</td>
             </tr>
             <tr>
-                <td rowspan="{{ data[" ids"]|length + 1 }}">Идентификаторы</td>
+                <td rowspan="{{ data['ids']|length + 1 }}">Идентификаторы</td>
             </tr>
-            {% for id in data["ids"] %}
+            {% for id in data['ids'] %}
             <tr>
-                <td>{{ id }}</td>
+                <td colspan="2">{{ id }}</td>
             </tr>
             {% endfor %}
+            <tr>
+            
         </tbody>
     </table>
-      
-      
+
+
 </body>
 
 </html>

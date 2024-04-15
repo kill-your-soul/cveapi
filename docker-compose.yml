@@ -45,6 +45,7 @@ services:
       context: ./updater
     volumes:
       - ./updater:/app/updater
+      - ./.env:/app/updater/.env:ro
     command: python -u main.py
   redis:
     image: redis:7
