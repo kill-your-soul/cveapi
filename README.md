@@ -7,7 +7,7 @@
 ### Run
 1. Run server and api 
 ```commandline
-docker compose up core db redis celery-worker --build -d
+docker compose up --build -d core db redis celery-worker
 ```
 
 3. Run migrations
