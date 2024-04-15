@@ -3,9 +3,9 @@ from typing import Any
 from fastapi import APIRouter
 from sqlmodel import select
 
-from core.api.deps import SessionDep
-from core.models.bdu import Bdu
-from core.models.nvd import Nvd
+from api.deps import SessionDep
+from models.bdu import Bdu
+from models.nvd import Nvd
 
 router = APIRouter()
 

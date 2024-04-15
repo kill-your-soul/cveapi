@@ -31,7 +31,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./core:/app/core
+      - ./core:/app/
       - ./.env:/app/.env:ro
   init:
     env_file:

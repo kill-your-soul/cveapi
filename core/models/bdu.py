@@ -1,6 +1,6 @@
 from sqlmodel import Field, MetaData
 
-from core.models.base import BaseModel
+from models.base import BaseModel
 
 
 class Bdu(BaseModel, table=True):

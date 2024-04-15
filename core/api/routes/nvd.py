@@ -5,9 +5,9 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import select
 
-from core.api.deps import SessionDep
-from core.models.nvd import Nvd
-from core.schemas.nvd import NvdCreate
+from api.deps import SessionDep
+from models.nvd import Nvd
+from schemas.nvd import NvdCreate
 
 router = APIRouter()
 

@@ -3,9 +3,9 @@ import datetime
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 
-from core.api.deps import SessionDep
-from core.models.cwe import Cwe
-from core.schemas.cwe import CweCreate
+from api.deps import SessionDep
+from models.cwe import Cwe
+from schemas.cwe import CweCreate
 
 router = APIRouter()
 

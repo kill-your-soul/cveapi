@@ -2,21 +2,24 @@ import hashlib
 import json
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException
-from sqlmodel import select
+from fastapi import APIRouter, HTTPException, Query
+from sqlmodel import func, select
 
-from core.api.deps import SessionDep
-from core.models.bdu import Bdu
-from core.schemas.bdu import BduCreate
+from api.deps import SessionDep
+from models.bdu import Bdu
+from schemas.bdu import BduCreate, ListBdu
 
 router = APIRouter()
 
 
-@router.get("/")
-async def get_bdus(session: SessionDep) -> list[Bdu]:
-    statement = select(Bdu)
-    cves = (await session.execute(statement)).scalars().all()
-    return cves
+@router.get("/", response_model=ListBdu)
+async def get_bdus(session: SessionDep, page: int = Query(1, ge=1), per_page: int = Query(10, le=100)) -> ListBdu:
+    count_statement = select(func.count()).select_from(Bdu)
+    count = (await session.execute(count_statement)).one()[0]
+    offset = (page - 1) * per_page
+    statement = select(Bdu).offset(offset).limit(per_page)
+    bdus = (await session.execute(statement)).scalars().all()
+    return ListBdu(count=count, bdus=bdus)
 
 
 @router.get("/{id}")

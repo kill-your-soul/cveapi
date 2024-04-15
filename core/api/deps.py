@@ -5,7 +5,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from core.core.db import engine
+from core.db import engine
 
 async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
