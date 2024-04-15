@@ -15,7 +15,7 @@ docker compose up --build -d core db redis celery-worker
 docker compose exec core alembic upgrade head
 ```
 
-4. Run init script, it tooks alot of time(up to 30 minutes, meybe more)
+4. Run init script, it tooks alot of time(up to 80 minutes, meybe more)
 ```commandline
 docker compose up init
 ```
