@@ -10,7 +10,7 @@ from models import Nvd
 
 @celery.task
 def update_bdu() -> None:
-    # TODO @kill_your_soul: Add update bdu 
+    # TODO @kill_your_soul: Add update bdu
     pass
 
 
