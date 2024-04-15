@@ -45,7 +45,7 @@ services:
       context: ./updater
     volumes:
       - ./updater:/app/updater
-    command: python -u test.py
+    command: python -u main.py
   redis:
     image: redis:7
     restart: always
