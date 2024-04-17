@@ -22,5 +22,5 @@ docker compose up init
 
 5. Run celery beat for update 
 ```commandline
-docker compose up celery-beat -d
+docker compose up -d celery-beat
 ```
