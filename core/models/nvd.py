@@ -24,3 +24,49 @@ class Nvd(BaseModel, table=True):
     # Keep CVSS separated when searching a particular score
     cvss2: float = Field(nullable=True)
     cvss3: float = Field(nullable=True)
+
+    @property
+    def cvss2_score(self):  # noqa: ANN201
+        if "cve" in self.json.keys():  # noqa: SIM118
+            if "baseMetricV2" in self.json["impact"]:
+                return self.json["impact"]["baseMetricV2"]["cvssV2"]["baseScore"]
+        elif "cvssMetricV2" in self.json["metrics"]:
+            return self.json["metrics"]["cvssMetricV2"][0]["cvssData"]["baseScore"]
+
+        return None
+
+
+    @property
+    def cvss2_vector(self):  # noqa: ANN201
+        if "cve" in self.json.keys():  # noqa: SIM118
+            if "baseMetricV2" in self.json["impact"]:
+                return self.json["impact"]["baseMetricV2"]["cvssV2"]["vectorString"]
+        elif "cvssMetricV2" in self.json["metrics"]:
+            return self.json["metrics"]["cvssMetricV2"][0]["cvssData"]["vectorString"]
+
+        return None
+
+
+    @property
+    def cvss3_score(self):  # noqa: ANN201
+        if "cve" in self.json.keys():  # noqa: SIM118
+            if "baseMetricV3" in self.json["impact"]:
+                return self.json["impact"]["baseMetricV3"]["cvssV3"]["baseScore"]
+        elif "cvssMetricV31" in self.json["metrics"]:
+            return self.json["metrics"]["cvssMetricV31"][0]["cvssData"]["baseScore"]
+        elif "cvssMetricV30" in self.json["metrics"]:
+            return self.json["metrics"]["cvssMetricV30"][0]["cvssData"]["baseScore"]
+
+        return None
+
+    @property
+    def cvss3_vector(self):  # noqa: ANN201
+        if "cve" in self.json.keys():  # noqa: SIM118
+            if "baseMetricV3" in self.json["impact"]:
+                return self.json["impact"]["baseMetricV3"]["cvssV3"]["vectorString"]
+        elif "cvssMetricV31" in self.json["metrics"]:
+            return self.json["metrics"]["cvssMetricV31"][0]["cvssData"]["vectorString"]
+        elif "cvssMetricV30" in self.json["metrics"]:
+            return self.json["metrics"]["cvssMetricV30"][0]["cvssData"]["vectorString"]
+
+        return None

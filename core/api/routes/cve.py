@@ -1,6 +1,7 @@
+import json
 from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import select
@@ -47,14 +48,24 @@ async def get_html_cve(request: Request, session: SessionDep, cve_id: str):
     nvd_row = nvd_result.first()
     bdu: Bdu | None = bdu_row[0] if bdu_row else None
     nvd: Nvd | None = nvd_row[0] if nvd_row else None
-    # print(bdu.description)
+    if not bdu and not nvd:
+        raise HTTPException(status_code=404, detail="Info about given cve not found")
+    # print(nvd)
+    # if nvd.cvss3_score:
+    #     score = {
+    #         "base_score": nvd.cvss3,
+    #         "vector":  json.loads(nvd.json)[""]
+    #     }
+    # TODO @kill_your_soul: check for existence of nvd object
     data = {
-        "score": {"base_score": 1, "vector": 2},
+        "score": {
+            "base_score": nvd.cvss3_score if nvd.cvss3_score else nvd.cvss2_score,
+            "vector": nvd.cvss3_vector if nvd.cvss3_vector else nvd.cvss2_vector,
+        },
         "description": bdu.description if bdu else "",
-        "ids": [bdu.bdu_id, nvd.cve_id],
+        "ids": [obj_id for obj_id in [bdu.bdu_id if bdu else None, nvd.cve_id if nvd else None] if obj_id],
     }
 
-    # TODO @kill_your_soul: Edit template to include all data
     return templates.TemplateResponse(
         request=request, name="base.html", context={"id": cve_id, "data": data},
     )
