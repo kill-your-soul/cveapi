@@ -2,6 +2,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from models.nvd import Nvd
+
 
 class NvdCreate(BaseModel):
     cve_id: str
@@ -11,3 +13,8 @@ class NvdCreate(BaseModel):
     summary: str
     cvss2: float
     cvss3: float
+
+
+class NvdList(BaseModel):
+    count: int
+    nvds: list[Nvd]

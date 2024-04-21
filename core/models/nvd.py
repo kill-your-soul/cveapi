@@ -70,3 +70,7 @@ class Nvd(BaseModel, table=True):
             return self.json["metrics"]["cvssMetricV30"][0]["cvssData"]["vectorString"]
 
         return None
+
+    @property
+    def description(self) -> str:
+        return self.json["descriptions"][0]["value"]

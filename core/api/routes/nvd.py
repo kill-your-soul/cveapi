@@ -3,21 +3,23 @@ import json
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Query
-from sqlmodel import select
+from sqlmodel import func, select
 
 from api.deps import SessionDep
 from models.nvd import Nvd
-from schemas.nvd import NvdCreate
+from schemas.nvd import NvdCreate, NvdList
 
 router = APIRouter()
 
 
-@router.get("/")
-async def get_nvds(session: SessionDep, page: int = Query(1, ge=1), per_page: int = Query(10, le=100)) -> list[Nvd]:
+@router.get("/", response_model=NvdList)
+async def get_nvds(session: SessionDep, page: int = Query(1, ge=1), per_page: int = Query(10, le=100)) -> NvdList:
+    count_statement = select(func.count()).select_from(Nvd)
+    count = (await session.execute(count_statement)).one()[0]
     offset = (page - 1) * per_page
     statement = select(Nvd).offset(offset).limit(per_page)
     cves = (await session.execute(statement)).scalars().all()
-    return cves
+    return NvdList(count=count, nvds=cves)
 
 
 @router.get("/{id}")

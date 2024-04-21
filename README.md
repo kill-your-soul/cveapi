@@ -24,3 +24,5 @@ docker compose up init
 ```commandline
 docker compose up -d celery-beat
 ```
+
+# TODO @kill_your_soul: Add check nvd score 

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таблица данных</title>
+    <style>
+        table {
+            margin-top: 20px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    {% for id in ids %}
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    <a href="{{ id['url'] }}">{{ id["name"] }}</a>
+                </th>
+                <th colspan="2">Значение</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if 'base_score' in id['score'] %}
+            <tr>
+                <td>Базовая оценка</td>
+                <td>{{ id['score']['base_score'] }}</td>
+                <td>{{ id['score']['vector'] }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td>Описание</td>
+                <td colspan="2">{{ id['description'] }}</td>
+            </tr>
+            <tr>
+                <td>Уровень потенциала нарушителя</td>
+                <td colspan="2"></td>
+            </tr>
+            <tr>
+                <td>Уязвимые активы</td>
+                <td colspan="2"></td>
+            </tr>
+            <tr>
+                <td>Рекомендации по устранению</td>
+                <td colspan="2"></td>
+            </tr>
+
+        </tbody>
+    </table>
+{% endfor %}
+
+
+</body>
+
+</html>

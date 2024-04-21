@@ -9,6 +9,12 @@ class BduCreate(BaseModel):
     description: str
 
 
-class ListBdu(BaseModel):
+class BduList(BaseModel):
     count: int
     bdus: list[Bdu]
+
+
+class BduOut(BaseModel):
+    bdu_id: str
+    cves: list[str]
+    description: str
