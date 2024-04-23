@@ -67,3 +67,13 @@ async def update_nvd(session: SessionDep, id: str, nvd_in: NvdCreate) -> Nvd:
     await session.refresh(item)
 
     return item
+
+
+@router.get("/cve_id/{cve_id}")
+async def get_nvd_by_cve_id(session: SessionDep, cve_id: str):
+    statement = select(Nvd).where(Nvd.cve_id == cve_id)
+    result = await session.execute(statement)
+    nvd = result.scalar_one_or_none()
+    if not nvd:
+        raise HTTPException(status_code=404, detail="Cve not found")
+    return nvd

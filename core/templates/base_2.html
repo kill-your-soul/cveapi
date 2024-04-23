@@ -14,44 +14,54 @@
 
         th,
         td {
-            border: 1px solid #dddddd;
+            border: 1px solid #000000;
             text-align: left;
             padding: 8px;
         }
 
-        th {
+        /* th {
             background-color: #f2f2f2;
-        }
+        } */
     </style>
 </head>
 
 <body>
-    {% for id in ids %}
+    {% for item in data %}
     <table>
         <thead>
-            <tr>
-                <th>
-                    <a href="{{ id['url'] }}">{{ id["name"] }}</a>
-                </th>
+            <tr style="background-color: #{{ item['color']}};">
                 <th colspan="2">Значение</th>
+                <th>
+                    <a href="{{ item['url'] }}">{{ item["name"] }}</a>
+                </th>
             </tr>
         </thead>
         <tbody>
-            {% if 'base_score' in id['score'] %}
+            {% if 'base_score' in item['score'] %}
             <tr>
-                <td>Базовая оценка</td>
-                <td>{{ id['score']['base_score'] }}</td>
-                <td>{{ id['score']['vector'] }}</td>
+                <td>Базовая оценка CVSS {{ item['score']['version'] }}</td>
+                <td>{{ item['score']['base_score'] }}</td>
+                <td>{{ item['score']['vector'] }}</td>
             </tr>
             {% endif %}
             <tr>
                 <td>Описание</td>
-                <td colspan="2">{{ id['description'] }}</td>
+                <td colspan="2">{{ item['description'] }}</td>
             </tr>
             <tr>
                 <td>Уровень потенциала нарушителя</td>
                 <td colspan="2"></td>
             </tr>
+            <tr>
+                <td rowspan="{{ item['ids']|length + 1 }}">Идентификаторы</td>
+            </tr>
+                {% for id in item['ids'] %}
+            <tr>
+                <td colspan="2">
+                    <a href="{{ id['url'] }}">{{ id["name"] }}</a>
+                </td>
+            </tr>
+                {% endfor %}
             <tr>
                 <td>Уязвимые активы</td>
                 <td colspan="2"></td>
@@ -63,7 +73,7 @@
 
         </tbody>
     </table>
-{% endfor %}
+    {% endfor %}
 
 
 </body>

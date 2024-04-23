@@ -9,6 +9,7 @@ from sqlmodel import select
 from api.deps import SessionDep
 from models.bdu import Bdu
 from models.nvd import Nvd
+from utils.color import get_color
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -110,8 +111,9 @@ async def get_html_cve(request: Request, session: SessionDep, cve_id: str):
                 "name": nvd.cve_id,
                 "description": nvd.summary,
                 "score": {
+                    "version": nvd.cvss3_vector.split("/")[0].split(":")[1] if nvd.cvss3_score else "2.0",
                     "base_score": nvd.cvss3_score if nvd.cvss3_score else nvd.cvss2_score,
-                    "vector": nvd.cvss3_vector if nvd.cvss3_vector else nvd.cvss2_vector,
+                    "vector": nvd.cvss3_vector[9:] if nvd.cvss3_vector else nvd.cvss2_vector,
                 },
                 "url": f"https://nvd.nist.gov/vuln/detail/{nvd.cve_id}",
             },
@@ -121,4 +123,74 @@ async def get_html_cve(request: Request, session: SessionDep, cve_id: str):
         request=request,
         name="base_2.html",
         context={"ids": data},
+    )
+
+
+@router.get("/many")
+async def get_cves(request: Request, session: SessionDep, cve_ids: str):
+    cves = list(map(str.strip, cve_ids.split(",")))
+    data = []
+    for cve in cves:
+        statement_bdu = select(Bdu).where(Bdu.cve_id == cve)
+        statement_nvd = select(Nvd).where(Nvd.cve_id == cve)
+        bdu_result = await session.execute(statement_bdu)
+        nvd_result = await session.execute(statement_nvd)
+        bdu_row = bdu_result.first()
+        nvd_row = nvd_result.first()
+        bdu: Bdu | None = bdu_row[0] if bdu_row else None
+        nvd: Nvd | None = nvd_row[0] if nvd_row else None
+        if not bdu and not nvd:
+            continue
+        tmp = {
+            "ids": [],
+        }
+        if bdu:
+            # data.append(
+            #     {
+            #         "name": bdu.bdu_id,
+            #         "description": bdu.description,
+            #         "url": f"https://bdu.fstec.ru/vul/{bdu.bdu_id[4:]}",
+            #     },
+            # )
+            tmp["description"] = bdu.description
+            tmp["ids"].append({
+                "name": bdu.bdu_id,
+                "url": f"https://bdu.fstec.ru/vul/{bdu.bdu_id[4:]}",
+            })
+        if nvd:
+            # data.append(
+            #     {
+            #         "name": nvd.cve_id,
+            #         "description": nvd.summary,
+            #         "score": {
+            #             "version": nvd.cvss3_vector.split("/")[0].split(":")[1] if nvd.cvss3_score else "2.0",
+            #             "base_score": nvd.cvss3_score if nvd.cvss3_score else nvd.cvss2_score,
+            #             "vector": nvd.cvss3_vector[9:] if nvd.cvss3_vector else nvd.cvss2_vector,
+            #         },
+            #         "url": f"https://nvd.nist.gov/vuln/detail/{nvd.cve_id}",
+            #     },
+            # )
+            if "description" not in tmp:
+                tmp["description"] = nvd.summary
+            tmp["name"] = nvd.cve_id
+            tmp["url"] = f"https://nvd.nist.gov/vuln/detail/{nvd.cve_id}"
+            tmp["score"] = {
+                "version": nvd.cvss3_vector.split("/")[0].split(":")[1] if nvd.cvss3_score else "2.0",
+                "base_score": nvd.cvss3_score if nvd.cvss3_score else nvd.cvss2_score,
+                "vector": nvd.cvss3_vector[9:] if nvd.cvss3_vector else nvd.cvss2_vector,
+            }
+            tmp["color"] = get_color(tmp["score"]["base_score"])
+            # print(tmp["color"])
+            tmp["ids"].append({
+                "name": nvd.cve_id,
+                "url": f"https://nvd.nist.gov/vuln/detail/{nvd.cve_id}",
+            })
+        # print(tmp["ids"])
+        data.append(tmp)
+        # tmp = {}
+    # print(len(data))
+    return templates.TemplateResponse(
+        request=request,
+        name="base_2.html",
+        context={"data": data},
     )
