@@ -75,7 +75,7 @@ async def get_html_cve(request: Request, session: SessionDep, cve_id: str):
     )
 
 
-@router.get("/html2", response_class=HTMLResponse)
+@router.get("/html2", response_class=HTMLResponse, deprecated=True)
 async def get_html_cve(request: Request, session: SessionDep, cve_id: str):
     statement_bdu = select(Bdu).where(Bdu.cve_id == cve_id)
     statement_nvd = select(Nvd).where(Nvd.cve_id == cve_id)
