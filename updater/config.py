@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     CVE_API_URL: str
     BDU_XLSX_URL: str
     BROKER: str
+    MITRE_CWE_URL: str
 
 
 settings = Settings()

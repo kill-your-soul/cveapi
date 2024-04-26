@@ -38,7 +38,7 @@ async def get_cve(session: SessionDep, cve_id: str) -> dict[str, Any]:
 
     return response
 
-
+# TODO @kill_your_soul: remove this endpoint 
 @router.get("/html", response_class=HTMLResponse, deprecated=True)
 async def get_html_cve(request: Request, session: SessionDep, cve_id: str):
     statement_bdu = select(Bdu).where(Bdu.cve_id == cve_id)
@@ -57,7 +57,6 @@ async def get_html_cve(request: Request, session: SessionDep, cve_id: str):
     #         "base_score": nvd.cvss3,
     #         "vector":  json.loads(nvd.json)[""]
     #     }
-    # TODO @kill_your_soul: check for existence of nvd object
 
     data = {
         "score": {
@@ -74,7 +73,7 @@ async def get_html_cve(request: Request, session: SessionDep, cve_id: str):
         context={"id": cve_id, "data": data},
     )
 
-
+# TODO @kill_your_soul: remove this endpoint
 @router.get("/html2", response_class=HTMLResponse, deprecated=True)
 async def get_html_cve(request: Request, session: SessionDep, cve_id: str):
     statement_bdu = select(Bdu).where(Bdu.cve_id == cve_id)
@@ -93,7 +92,6 @@ async def get_html_cve(request: Request, session: SessionDep, cve_id: str):
     #         "base_score": nvd.cvss3,
     #         "vector":  json.loads(nvd.json)[""]
     #     }
-    # TODO @kill_your_soul: check for existence of nvd object
     # print(nvd)
     # print(bdu)
     data = []

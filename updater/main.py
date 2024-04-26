@@ -3,13 +3,60 @@ import json
 import re
 import time
 from io import BytesIO
+from zipfile import ZipFile
 
 import requests
+import untangle
 from openpyxl import load_workbook
 
 from config import settings
 
 # from models import Nvd
+
+def init_cwe():
+    """
+    Import the CWE list.
+    """
+    print("Importing CWE list...")
+
+    # Download the file
+    # with timed_operation("Downloading {}...".format(settings.MITRE_CWE_URL)):
+    resp = requests.get(settings.MITRE_CWE_URL).content
+
+    # Parse weaknesses
+    # with timed_operation("Parsing cwes..."):
+    z = ZipFile(BytesIO(resp))
+    raw = z.open(z.namelist()[0]).read()
+    obj = untangle.parse(raw.decode("utf-8"))
+    weaknesses = obj.Weakness_Catalog.Weaknesses.Weakness
+    categories = obj.Weakness_Catalog.Categories.Category
+
+    # Create the objects
+    cwes = {}
+    # with timed_operation("Creating mappings..."):
+    count = 0
+    for c in weaknesses + categories:
+        tmp = {
+            # "id": get_uuid(),
+            "cwe_id": f"CWE-{c['ID']}",
+            "name": c["Name"],
+            "description": c.Description.cdata
+            if hasattr(c, "Description")
+            else c.Summary.cdata,
+        }
+        resp = requests.post(settings.CVE_API_URL + "api/v1/cwe/", data=json.dumps(tmp))
+        count += 1
+        # print(cwes[c["ID"]])
+
+    # Insert the objects in database
+    # with timed_operation("Inserting CWE..."):
+        # db.session.bulk_insert_mappings(Cwe, cwes.values())
+        # db.session.commit()
+    # for cwe in cwes:
+    #     print(cwe)
+    print(f"{count} CWE imported.")
+    del cwes
+
 
 def init_bdu() -> None:
     print("Getting info from BDU")
@@ -49,7 +96,7 @@ def init_nvd() -> None:
     Important notice:
         This product uses data from the NVD API but is not endorsed or certified by the NVD.
     """
-    print("Gettins info from NVD")  # noqa: T201
+    print("Gettins info from NVD")
     mappings = {"vendors": {}, "products": {}, "cves": [], "changes": []}
     url_template = settings.NVD_API_URL + "?startIndex={idx}"
 
@@ -97,7 +144,7 @@ def init_nvd() -> None:
                 descriptions = [d for d in descriptions if d["lang"] in ("en", "en-US")]
             summary = descriptions[0]["value"]
             cve = dict(  # noqa: C408
-                # id=cve_db_id,  # noqa: ERA001
+                # id=cve_db_id,
                 cve_id=cve_id,
                 summary=summary,
                 json=cve_data,
@@ -105,8 +152,8 @@ def init_nvd() -> None:
                 cwes=cwes,
                 cvss2=cvss2,
                 cvss3=cvss3,
-                # created_at=arrow.get(cve_data["published"]).datetime,  # noqa: ERA001
-                # updated_at=arrow.get(cve_data["lastModified"]).datetime,  # noqa: ERA001
+                # created_at=arrow.get(cve_data["published"]).datetime,
+                # updated_at=arrow.get(cve_data["lastModified"]).datetime,
             )
             # Create the CVEs mappings
             mappings["cves"].append(
@@ -159,5 +206,6 @@ def init_nvd() -> None:
 
 
 if __name__ == "__main__":
-    init_bdu()
-    init_nvd()
+    # init_bdu()
+    # init_nvd()
+    init_cwe()

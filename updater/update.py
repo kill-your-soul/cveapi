@@ -9,6 +9,11 @@ from models import Nvd
 
 
 @celery.task
+def update_cwe() -> None:
+    # TODO @kill_your_soul: Add update CWE
+    pass
+
+@celery.task
 def update_bdu() -> None:
     # TODO @kill_your_soul: Add update bdu
     pass
