@@ -70,7 +70,7 @@ async def update_nvd(session: SessionDep, id: str, nvd_in: NvdCreate) -> Nvd:
 
 
 @router.get("/cve_id/{cve_id}")
-async def get_nvd_by_cve_id(session: SessionDep, cve_id: str):
+async def get_nvd_by_cve_id(session: SessionDep, cve_id: str) -> Nvd:
     statement = select(Nvd).where(Nvd.cve_id == cve_id)
     result = await session.execute(statement)
     nvd = result.scalar_one_or_none()

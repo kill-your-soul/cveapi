@@ -76,7 +76,7 @@ services:
       - default
     command: celery -A update.celery beat --loglevel=info
     volumes:
-      - ./updater:/app/updater  # унаследуйте настройки updater
+      - ./updater:/app/updater  
 
 volumes:
   db_data:
