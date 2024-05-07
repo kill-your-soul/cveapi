@@ -13,7 +13,13 @@ class Nvd(BaseModel):
     cvss3: float
 
 
-class BduCreate(BaseModel):
+class Bdu(BaseModel):
     bdu_id: str
     cve_id: str
+    description: str
+
+
+class Cwe(BaseModel):
+    cwe_id: str
+    name: str
     description: str

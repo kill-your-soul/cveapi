@@ -90,6 +90,7 @@ def init_bdu() -> None:
         _resp = session.post(settings.CVE_API_URL + "api/v1/bdu/", data=json.dumps(bdu))
         # print(resp)
 
+
 def init_nvd() -> None:
     """Import the CVE list.
 

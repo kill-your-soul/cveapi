@@ -15,6 +15,8 @@ class BduList(BaseModel):
 
 
 class BduOut(BaseModel):
+    id: str
     bdu_id: str
     cves: list[str]
     description: str
+    hash_sum: str

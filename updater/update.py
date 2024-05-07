@@ -1,22 +1,126 @@
 import hashlib
 import json
+import re
 import time
+from io import BytesIO
+from zipfile import ZipFile
 
 import requests  # type: ignore  # noqa: PGH003
+import untangle
+from openpyxl import load_workbook
 
 from config import celery, settings
-from models import Nvd
+from models import Bdu, Cwe, Nvd
 
 
 @celery.task
 def update_cwe() -> None:
-    # TODO @kill_your_soul: Add update CWE
-    pass
+    print("Importing CWE list...")
+
+    # Download the file
+    # with timed_operation("Downloading {}...".format(settings.MITRE_CWE_URL)):
+    resp = requests.get(settings.MITRE_CWE_URL).content
+
+    # Parse weaknesses
+    # with timed_operation("Parsing cwes..."):
+    z = ZipFile(BytesIO(resp))
+    raw = z.open(z.namelist()[0]).read()
+    obj = untangle.parse(raw.decode("utf-8"))
+    weaknesses = obj.Weakness_Catalog.Weaknesses.Weakness
+    categories = obj.Weakness_Catalog.Categories.Category
+
+    # Create the objects
+    cwes = {}
+    # with timed_operation("Creating mappings..."):
+    count = 0
+    cwes = []
+    for c in weaknesses + categories:
+        tmp = {
+            # "id": get_uuid(),
+            "cwe_id": f"CWE-{c['ID']}",
+            "name": c["Name"],
+            "description": c.Description.cdata
+            if hasattr(c, "Description")
+            else c.Summary.cdata,
+        }
+        cwes.append(tmp)
+        # resp = requests.post(settings.CVE_API_URL + "api/v1/cwe/", data=json.dumps(tmp))
+        # count += 1
+        # print(cwes[c["ID"]])
+        # print(tmp)
+    session = requests.Session()
+    for item in cwes:
+        cwe = Cwe(**item)
+        nvd_in_hash_sum = hashlib.sha256(
+            json.dumps(cwe.model_dump(), sort_keys=True).encode("utf-8"),
+        ).hexdigest()
+        server_data = session.get(settings.CVE_API_URL + f"api/v1/cwe/cwe_id/{item['cwe_id']}").json()
+        # print(server_data["bdu"]["hash_sum"])
+        if server_data["hash_sum"] != nvd_in_hash_sum:
+            print("New data")
+            resp = session.put(
+                settings.CVE_API_URL + f'api/v1/cwe/{server_data["id"]}',
+                data=json.dumps(item),
+            )
+            print(resp.text)
+        else:
+            print("Old data")
+    # Insert the objects in database
+    # with timed_operation("Inserting CWE..."):
+        # db.session.bulk_insert_mappings(Cwe, cwes.values())
+        # db.session.commit()
+    # for cwe in cwes:
+    #     print(cwe)
+    # print(f"{count} CWE imported.")
+
 
 @celery.task
 def update_bdu() -> None:
-    # TODO @kill_your_soul: Add update bdu
-    pass
+    print("Getting info from BDU")
+    # r = requests.get(settings.CVE_API_URL)
+    # print(r)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    }
+    xlsx = requests.get(settings.BDU_XLSX_URL, verify=False, allow_redirects=True, headers=headers).content  # noqa: S501
+    wb = load_workbook(filename=BytesIO(xlsx))
+    results = []
+    sheet = wb.active
+    session = requests.Session()
+    # f = open('res.txt', 'w')
+    for row in sheet.iter_rows(min_row=4):
+        bdu_id = row[0].value
+        description = row[1].value
+        other_id = row[18].value
+        # Создаем новый словарь для каждой итерации
+        bdu_data = {"cve_id": "", "bdu_id": bdu_id, "description": description}
+        if other_id:
+            cve_match = re.findall(r"CVE-\d{4}-\d{4,7}", str(other_id))
+            for cve_id in cve_match:
+                # Создаем новый словарь для каждого cve_id
+                temp_bdu_data = bdu_data.copy()
+                temp_bdu_data["cve_id"] = cve_id
+                results.append(temp_bdu_data)
+        else:
+            results.append(bdu_data)
+    for item in results:
+        bdu = Bdu(**item)
+        nvd_in_hash_sum = hashlib.sha256(
+            json.dumps(bdu.model_dump(), sort_keys=True).encode("utf-8"),
+        ).hexdigest()
+        server_data = session.get(settings.CVE_API_URL + f"api/v1/cve/?cve_id={item['cve_id']}").json()
+        # print(server_data["bdu"]["hash_sum"])
+        if server_data["bdu"]["hash_sum"] != nvd_in_hash_sum:
+            print("New data")
+            resp = session.put(
+                settings.CVE_API_URL + f'api/v1/bdu/{server_data["bdu"]["id"]}',
+                data=json.dumps(item),
+            )
+            print(resp.text)
+        else:
+            print("Old data")
+        # _resp = session.post(settings.CVE_API_URL + "api/v1/bdu/", data=json.dumps(bdu))
+        # print(resp)
 
 
 @celery.task
@@ -119,3 +223,4 @@ def update_nvd() -> None:  # noqa: PLR0915, PLR0912, C901
 def update() -> None:
     update_nvd()
     update_bdu()
+    update_cwe()

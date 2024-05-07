@@ -38,7 +38,9 @@ async def get_bdu_by_bdu_id(session: SessionDep, bdu_id: str) -> BduOut:
     if not bdus:
         raise HTTPException(status_code=404, detail="Bdu not found")
     cves = [bdu.cve_id for bdu in bdus]
-    return BduOut(bdu_id=bdus[0].bdu_id, cves=cves, description=bdus[0].description)
+    return BduOut(
+        id=bdus[0].id, bdu_id=bdus[0].bdu_id, cves=cves, description=bdus[0].description, hash_sum=bdus[0].hash_sum,
+    )
 
 
 @router.post("/", response_model=Bdu)
