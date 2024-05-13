@@ -17,6 +17,7 @@ templates = Jinja2Templates(directory="templates")
 
 @router.get("/")
 async def get_cve(session: SessionDep, cve_id: str) -> dict[str, Any]:
+    cve_id = cve_id.upper()
     statement_bdu = select(Bdu).where(Bdu.cve_id == cve_id)
     statement_nvd = select(Nvd).where(Nvd.cve_id == cve_id)
     bdu_result = await session.execute(statement_bdu)
@@ -38,7 +39,8 @@ async def get_cve(session: SessionDep, cve_id: str) -> dict[str, Any]:
 
     return response
 
-# TODO @kill_your_soul: remove this endpoint 
+
+# TODO @kill_your_soul: remove this endpoint
 @router.get("/html", response_class=HTMLResponse, deprecated=True)
 async def get_html_cve(request: Request, session: SessionDep, cve_id: str):
     statement_bdu = select(Bdu).where(Bdu.cve_id == cve_id)
@@ -72,6 +74,7 @@ async def get_html_cve(request: Request, session: SessionDep, cve_id: str):
         name="base.html",
         context={"id": cve_id, "data": data},
     )
+
 
 # TODO @kill_your_soul: remove this endpoint
 @router.get("/html2", response_class=HTMLResponse, deprecated=True)
@@ -126,7 +129,7 @@ async def get_html_cve(request: Request, session: SessionDep, cve_id: str):
 
 @router.get("/many")
 async def get_cves(request: Request, session: SessionDep, cve_ids: str):
-    cves = list(map(str.strip, cve_ids.split(",")))
+    cves = [cve.strip().upper() for cve in cve_ids.split(",")]
     data = []
     for cve in cves:
         statement_bdu = select(Bdu).where(Bdu.cve_id == cve)
@@ -151,10 +154,12 @@ async def get_cves(request: Request, session: SessionDep, cve_ids: str):
             #     },
             # )
             tmp["description"] = bdu.description
-            tmp["ids"].append({
-                "name": bdu.bdu_id,
-                "url": f"https://bdu.fstec.ru/vul/{bdu.bdu_id[4:]}",
-            })
+            tmp["ids"].append(
+                {
+                    "name": bdu.bdu_id,
+                    "url": f"https://bdu.fstec.ru/vul/{bdu.bdu_id[4:]}",
+                }
+            )
         if nvd:
             # data.append(
             #     {
@@ -179,10 +184,12 @@ async def get_cves(request: Request, session: SessionDep, cve_ids: str):
             }
             tmp["color"] = get_color(tmp["score"]["base_score"])
             # print(tmp["color"])
-            tmp["ids"].append({
-                "name": nvd.cve_id,
-                "url": f"https://nvd.nist.gov/vuln/detail/{nvd.cve_id}",
-            })
+            tmp["ids"].append(
+                {
+                    "name": nvd.cve_id,
+                    "url": f"https://nvd.nist.gov/vuln/detail/{nvd.cve_id}",
+                }
+            )
         # print(tmp["ids"])
         data.append(tmp)
         # tmp = {}
