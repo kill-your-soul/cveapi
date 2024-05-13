@@ -54,9 +54,12 @@ def update_cwe() -> None:
         nvd_in_hash_sum = hashlib.sha256(
             json.dumps(cwe.model_dump(), sort_keys=True).encode("utf-8"),
         ).hexdigest()
-        server_data = session.get(settings.CVE_API_URL + f"api/v1/cwe/cwe_id/{item['cwe_id']}").json()
+        server_data = session.get(settings.CVE_API_URL + f"api/v1/cwe/cwe_id/{item['cwe_id']}")
         # print(server_data["bdu"]["hash_sum"])
-        if server_data["hash_sum"] != nvd_in_hash_sum:
+        if server_data.status_code == 404:
+            resp = requests.post(settings.CVE_API_URL + "api/v1/cwe/", data=json.dumps(cwe))
+            continue
+        if server_data.json()["hash_sum"] != nvd_in_hash_sum:
             print("New data")
             resp = session.put(
                 settings.CVE_API_URL + f'api/v1/cwe/{server_data["id"]}',
@@ -110,6 +113,9 @@ def update_bdu() -> None:
         ).hexdigest()
         server_data = session.get(settings.CVE_API_URL + f"api/v1/cve/?cve_id={item['cve_id']}").json()
         # print(server_data["bdu"]["hash_sum"])
+        if not server_data["bdu"]:
+            _resp = session.post(settings.CVE_API_URL + "api/v1/bdu/", data=json.dumps(bdu))
+            continue
         if server_data["bdu"]["hash_sum"] != nvd_in_hash_sum:
             print("New data")
             resp = session.put(
@@ -199,9 +205,12 @@ def update_nvd() -> None:  # noqa: PLR0915, PLR0912, C901
                 nvd_in_hash_sum = hashlib.sha256(
                     json.dumps(nvd_in.model_dump(), sort_keys=True).encode("utf-8"),
                 ).hexdigest()
-                print(nvd_in_hash_sum)
+                # print(nvd_in_hash_sum)
                 server_data = requests.get(settings.CVE_API_URL + f"api/v1/cve/?cve_id={cve['cve_id']}").json()
-                print(server_data["nvd"]["hash_sum"])
+                print(server_data)
+                if not server_data["nvd"]:
+                    resp = requests.post(settings.CVE_API_URL + "api/v1/nvd/", data=json.dumps(cve))
+                    continue
                 if server_data["nvd"]["hash_sum"] != nvd_in_hash_sum:
                     print("New data")
                     resp = requests.put(
