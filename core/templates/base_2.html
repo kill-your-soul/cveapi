@@ -78,7 +78,11 @@
         </tbody>
     </table>
     <div>
-        {{ item['pocs'] }}
+        <ul>
+            {% for poc in item['pocs'] %}
+            <li><a href="{{ poc['url'] }}">{{ poc['name'] }}</a></li>
+            {% endfor %}
+        </ul>
     </div>
     {% endfor %}
 
