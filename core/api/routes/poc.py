@@ -29,12 +29,12 @@ async def get_pocs(session: SessionDep, page: int = Query(1, ge=1), per_page: in
     return CveList(count=count, cves=pocs)
 
 @router.get("/cve_id/{cve_id}")
-async def get_nvd_by_cve_id(session: SessionDep, cve_id: str) -> Cve:
+async def get_poc_by_cve_id(session: SessionDep, cve_id: str) -> Cve:
     statement = select(Cve).where(Cve.cve_id == cve_id)
     result = await session.execute(statement)
     cve = result.scalar_one_or_none()
     if not cve:
-        raise HTTPException(status_code=404, detail="Cve not found")
+        raise HTTPException(status_code=404, detail="Poc not found")
     return cve
 
 

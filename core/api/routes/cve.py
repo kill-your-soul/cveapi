@@ -7,6 +7,7 @@ from sqlmodel import select
 
 from api.deps import SessionDep
 from models.bdu import Bdu
+from models.cve import Cve
 from models.nvd import Nvd
 from utils.color import get_color
 
@@ -131,14 +132,25 @@ async def get_cves(request: Request, session: SessionDep, cve_ids: str):
     cves = [cve.strip().upper() for cve in cve_ids.split(",")]
     data = []
     for cve in cves:
+        print(cve)
         statement_bdu = select(Bdu).where(Bdu.cve_id == cve)
         statement_nvd = select(Nvd).where(Nvd.cve_id == cve)
+        statement_poc = select(Cve).where(Cve.cve_id == cve)
+        poc_result = await session.execute(statement_poc)
         bdu_result = await session.execute(statement_bdu)
         nvd_result = await session.execute(statement_nvd)
-        bdu_row = bdu_result.first()
-        nvd_row = nvd_result.first()
-        bdu: Bdu | None = bdu_row[0] if bdu_row else None
-        nvd: Nvd | None = nvd_row[0] if nvd_row else None
+        # bdu_row = bdu_result.first()
+        # nvd_row = nvd_result.first()
+        poc: Cve | None = poc_result.scalar_one_or_none()
+        bdu: Bdu | None = bdu_result.scalar_one_or_none()
+        nvd: Nvd | None = nvd_result.scalar_one_or_none()
+        # bdu: Bdu | None = bdu_row[0] if bdu_row else None
+        # nvd: Nvd | None = nvd_row[0] if nvd_row else None
+        print(bdu)
+        print(nvd)
+        # poc: Cve | None = poc_row[0] if poc_row else None
+        # print(poc)
+        # print(poc.pocs)
         if not bdu and not nvd:
             continue
         tmp = {
@@ -189,10 +201,13 @@ async def get_cves(request: Request, session: SessionDep, cve_ids: str):
                     "url": f"https://nvd.nist.gov/vuln/detail/{nvd.cve_id}",
                 }
             )
+        if poc:
+            tmp["pocs"] = poc.pocs
         # print(tmp["ids"])
         data.append(tmp)
         # tmp = {}
     # print(len(data))
+    # TODO: add pocs after table @kill_your_soul
     return templates.TemplateResponse(
         request=request,
         name="base_2.html",
