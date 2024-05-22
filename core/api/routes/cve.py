@@ -207,7 +207,6 @@ async def get_cves(request: Request, session: SessionDep, cve_ids: str):
         data.append(tmp)
         # tmp = {}
     # print(len(data))
-    # TODO: add pocs after table @kill_your_soul
     return templates.TemplateResponse(
         request=request,
         name="base_2.html",
