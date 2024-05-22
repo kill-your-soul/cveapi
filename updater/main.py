@@ -3,15 +3,19 @@ import json
 import re
 import time
 from io import BytesIO
+from shutil import rmtree
+from typing import Any
 from zipfile import ZipFile
 
 import requests
 import untangle
+from git import Repo, Tree
 from openpyxl import load_workbook
 
 from config import settings
 
 # from models import Nvd
+
 
 def init_cwe():
     """
@@ -40,9 +44,7 @@ def init_cwe():
             # "id": get_uuid(),
             "cwe_id": f"CWE-{c['ID']}",
             "name": c["Name"],
-            "description": c.Description.cdata
-            if hasattr(c, "Description")
-            else c.Summary.cdata,
+            "description": c.Description.cdata if hasattr(c, "Description") else c.Summary.cdata,
         }
         resp = requests.post(settings.CVE_API_URL + "api/v1/cwe/", data=json.dumps(tmp))
         count += 1
@@ -50,8 +52,8 @@ def init_cwe():
 
     # Insert the objects in database
     # with timed_operation("Inserting CWE..."):
-        # db.session.bulk_insert_mappings(Cwe, cwes.values())
-        # db.session.commit()
+    # db.session.bulk_insert_mappings(Cwe, cwes.values())
+    # db.session.commit()
     # for cwe in cwes:
     #     print(cwe)
     print(f"{count} CWE imported.")
@@ -205,8 +207,49 @@ def init_nvd() -> None:
             time.sleep(6)
 
 
+def save_files(root: Tree, level: int = 0):
+    for entry in root:
+        if entry.type == "blob" and entry.name.lower().startswith("cve"):
+            print(entry.name)
+            # print("cve" in entry.name.lower())
+            pocs, refs = extract_links_from_file(entry.data_stream)
+            tmp = {
+                "cve_id": entry.name.split(".")[0],
+                "pocs": pocs,
+                "references": refs,
+            }
+            resp = requests.post(settings.CVE_API_URL + "api/v1/poc/", data=json.dumps(tmp))
+            # print(pocs, "\n", refs)
+        elif entry.type == "tree":
+            save_files(entry, level + 1)
+
+
+def extract_links_from_file(f) -> tuple[list[Any], list[Any]]:
+    poc_links = []
+    ref_links = []
+    
+    content = f.read().decode("UTF-8")
+    poc_section = re.search(r"#### Github(.*?)(###|$)", content, re.DOTALL)
+    ref_section = re.search(r"#### Reference(.*?)####", content, re.DOTALL)
+    if poc_section:
+        poc_links = re.findall(r"https?://\S+", poc_section.group(1))
+    if ref_section:
+        ref_links = re.findall(r"https?://\S+", ref_section.group(1))
+    return poc_links, ref_links
+
+
+def init_poc():
+    directory_to_repo = "./tmp"
+    repo = Repo.clone_from(settings.REPO_URL, directory_to_repo)
+    # prev_commits = list(repo.iter_commits(all=True, max_count=10))  # Last 10 commits from all branches.
+    # tree = prev_commits[0].tree
+    tree: Tree = repo.head.commit.tree
+    save_files(tree)
+    rmtree(directory_to_repo)
+
 
 if __name__ == "__main__":
     # init_bdu()
     # init_nvd()
-    init_cwe()
+    # init_cwe()
+    init_poc()

@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     BDU_XLSX_URL: str
     BROKER: str
     MITRE_CWE_URL: str
+    REPO_URL: str
 
 
 settings = Settings()
