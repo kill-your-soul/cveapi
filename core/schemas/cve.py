@@ -12,5 +12,5 @@ class CveList(BaseModel):
 class CveCreate(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     cve_id: str
-    pocs: list[HttpUrl]
-    references: list[HttpUrl]
+    pocs: list[str]
+    references: list[str]

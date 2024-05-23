@@ -64,7 +64,7 @@ services:
       context: ./updater
     volumes:
       - ./updater:/app/updater
-    command: celery -A update.celery worker --loglevel=info
+    command: celery -A update.celery worker --loglevel=debug
 
   celery-beat:
     build:
@@ -74,7 +74,7 @@ services:
       - celery-worker
     networks:
       - default
-    command: celery -A update.celery beat --loglevel=info
+    command: celery -A update.celery beat --loglevel=debug
     volumes:
       - ./updater:/app/updater  
 

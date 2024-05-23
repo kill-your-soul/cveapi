@@ -4,7 +4,6 @@ import re
 import time
 from io import BytesIO
 from shutil import rmtree
-from typing import Any
 from zipfile import ZipFile
 
 import requests
@@ -13,6 +12,7 @@ from git import Repo, Tree
 from openpyxl import load_workbook
 
 from config import settings
+from utils import extract_links_from_file
 
 # from models import Nvd
 
@@ -219,26 +219,13 @@ def save_files(root: Tree, level: int = 0):
                 "references": refs,
             }
             resp = requests.post(settings.CVE_API_URL + "api/v1/poc/", data=json.dumps(tmp))
+
             # print(pocs, "\n", refs)
         elif entry.type == "tree":
             save_files(entry, level + 1)
 
 
-def extract_links_from_file(f) -> tuple[list[Any], list[Any]]:
-    poc_links = []
-    ref_links = []
-    
-    content = f.read().decode("UTF-8")
-    poc_section = re.search(r"#### Github(.*?)(###|$)", content, re.DOTALL)
-    ref_section = re.search(r"#### Reference(.*?)####", content, re.DOTALL)
-    if poc_section:
-        poc_links = re.findall(r"https?://\S+", poc_section.group(1))
-    if ref_section:
-        ref_links = re.findall(r"https?://\S+", ref_section.group(1))
-    return poc_links, ref_links
-
-
-def init_poc():
+def init_poc() -> None:
     directory_to_repo = "./tmp"
     repo = Repo.clone_from(settings.REPO_URL, directory_to_repo)
     # prev_commits = list(repo.iter_commits(all=True, max_count=10))  # Last 10 commits from all branches.

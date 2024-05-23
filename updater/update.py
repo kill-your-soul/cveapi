@@ -1,16 +1,21 @@
 import hashlib
+import http
 import json
 import re
 import time
 from io import BytesIO
+from shutil import rmtree
+from typing import Any
 from zipfile import ZipFile
 
 import requests  # type: ignore  # noqa: PGH003
 import untangle
+from git import Repo, Tree
 from openpyxl import load_workbook
 
 from config import celery, settings
-from models import Bdu, Cwe, Nvd
+from models import Bdu, Cve, Cwe, Nvd
+from utils import extract_links_from_file
 
 
 @celery.task
@@ -39,9 +44,7 @@ def update_cwe() -> None:
             # "id": get_uuid(),
             "cwe_id": f"CWE-{c['ID']}",
             "name": c["Name"],
-            "description": c.Description.cdata
-            if hasattr(c, "Description")
-            else c.Summary.cdata,
+            "description": c.Description.cdata if hasattr(c, "Description") else c.Summary.cdata,
         }
         cwes.append(tmp)
         # resp = requests.post(settings.CVE_API_URL + "api/v1/cwe/", data=json.dumps(tmp))
@@ -54,7 +57,7 @@ def update_cwe() -> None:
         nvd_in_hash_sum = hashlib.sha256(
             json.dumps(cwe.model_dump(), sort_keys=True).encode("utf-8"),
         ).hexdigest()
-        server_data = session.get(settings.CVE_API_URL + f"api/v1/cwe/cwe_id/{item['cwe_id']}")
+        server_data: requests.Response = session.get(settings.CVE_API_URL + f"api/v1/cwe/cwe_id/{item['cwe_id']}")
         # print(server_data["bdu"]["hash_sum"])
         if server_data.status_code == 404:
             resp = requests.post(settings.CVE_API_URL + "api/v1/cwe/", data=json.dumps(cwe))
@@ -70,8 +73,8 @@ def update_cwe() -> None:
             print("Old data")
     # Insert the objects in database
     # with timed_operation("Inserting CWE..."):
-        # db.session.bulk_insert_mappings(Cwe, cwes.values())
-        # db.session.commit()
+    # db.session.bulk_insert_mappings(Cwe, cwes.values())
+    # db.session.commit()
     # for cwe in cwes:
     #     print(cwe)
     # print(f"{count} CWE imported.")
@@ -228,8 +231,60 @@ def update_nvd() -> None:  # noqa: PLR0915, PLR0912, C901
             time.sleep(6)
 
 
+def update_files(root: Tree, level: int = 0) -> None:
+    print("Start updating")
+    session = requests.Session()
+    for entry in root:
+        if entry.type == "blob" and entry.name.lower().startswith("cve"):
+            print(entry.name)
+            # print("cve" in entry.name.lower())
+            pocs, refs = extract_links_from_file(entry.data_stream)
+            tmp = {
+                "cve_id": entry.name.split(".")[0],
+                "pocs": pocs,
+                "references": refs,
+            }
+            poc = Cve(**tmp)
+            cve_in_hash_sum = hashlib.sha256(
+                json.dumps(poc.model_dump(), sort_keys=True).encode("utf-8"),
+            ).hexdigest()
+            server_data = session.get(settings.CVE_API_URL + f"api/v1/poc/cve_id/{tmp['cve_id']}")
+            if server_data.status_code == http.HTTPStatus.NOT_FOUND:
+                print(poc.model_dump_json())
+                resp: requests.Response = session.post(
+                    settings.CVE_API_URL + "api/v1/poc/", data=poc.model_dump_json().encode("UTF-8"),
+                )
+                print(f"{resp.text=} {resp.status_code=}" )
+                continue
+            if server_data.json()["hash_sum"] != cve_in_hash_sum:
+                print("New data")
+                resp = session.put(
+                    settings.CVE_API_URL + f'api/v1/cwe/{server_data["id"]}',
+                    data=json.dumps(tmp),
+                )
+                print(resp.text)
+            else:
+                print("Old data")
+            # resp = requests.post(settings.CVE_API_URL + "api/v1/poc/", data=json.dumps(tmp))
+            # print(pocs, "\n", refs)
+        elif entry.type == "tree":
+            update_files(entry, level + 1)
+
+
+@celery.task
+def update_poc() -> None:
+    directory_to_repo = "./tmp"
+    repo = Repo.clone_from(settings.REPO_URL, directory_to_repo)
+    # prev_commits = list(repo.iter_commits(all=True, max_count=10))  # Last 10 commits from all branches.
+    # tree = prev_commits[0].tree
+    tree: Tree = repo.head.commit.tree
+    update_files(tree)
+    rmtree(directory_to_repo)
+
+
 @celery.task
 def update() -> None:
+    update_poc()
     update_nvd()
     update_bdu()
     update_cwe()

@@ -23,3 +23,9 @@ class Cwe(BaseModel):
     cwe_id: str
     name: str
     description: str
+
+
+class Cve(BaseModel):
+    cve_id: str
+    pocs: list[str]
+    references: list[str]
